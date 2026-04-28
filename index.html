@@ -372,7 +372,7 @@
                 
                 const pdfBytes = await newDoc.save();
                 // 按用户要求：文件名 = 原始文件名(四室).pdf
-                const finalFileName = `${originalBaseName}(四室).pdf`;
+                const finalFileName = `${originalBaseName}（四室）.pdf`;
                 saveAs(new Blob([pdfBytes]), finalFileName);
                 showStatus(`🎉 成功生成合并PDF，文件名为“${finalFileName}”，页脚旋转 ${rotateDeg}°，已下载！`, 'success');
             } catch (err) {
