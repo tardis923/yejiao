@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PDF页脚 - 右下角 + 旋转0°/90°</title>
+    <title>PDF页脚</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
@@ -108,8 +108,8 @@
 <body>
 <div class="app-container">
     <div class="hero">
-        <h1>📄 右下角页脚（紧凑配置 · 支持旋转）</h1>
-        <p>上传PDF · 每份独立页脚文字 · 旋转0°水平 / 90°竖向 · 合并为单PDF</p>
+        <h1>📄 右下角页脚</h1>
+        <p>上传PDF · 每份独立页脚文字 · 合并为单PDF</p>
     </div>
     <div class="main-panel">
         <div class="fixed-controls">
@@ -120,10 +120,10 @@
             </div>
             <div class="global-config">
                 <div class="config-item"><label>🔠 字体大小(pt)</label><input type="number" id="fontSize" value="14" step="1" min="8" max="48"></div>
-                <div class="config-item"><label>🔄 旋转角度</label>
+                <div class="config-item"><label>🔄 纸张方向</label>
                     <select id="rotateAngle">
-                        <option value="0">0° (水平)</option>
-                        <option value="90">90° (竖向)</option>
+                        <option value="0">竖向</option>
+                        <option value="90">横向</option>
                     </select>
                 </div>
                 <div class="config-item"><label>⬇️ 底部距离(pt)</label><input type="number" id="bottomOffset" value="35" step="2" min="-30" max="100"></div>
@@ -145,7 +145,7 @@
         </div>
         <div class="generate-section">
             <button id="generateBtn" class="generate-btn">⚡ 生成合并PDF（右下角页脚）⚡</button>
-            <div id="statusMessage" class="status">💡 每份可独立设置页脚文字，支持水平(0°)或竖向(90°)放置于右下角。</div>
+            <div id="statusMessage" class="status">💡 每份可独立设置页脚文字，放置于右下角。</div>
             <div class="small-note">※ 页脚转为图片，完美支持中文。总页数 = 原页数 × 份数。网格布局紧凑，方便多份配置。</div>
         </div>
     </div>
