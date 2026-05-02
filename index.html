@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>PDF页脚工具 - 矢量文本（支持中文字体）</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; font-family: system-ui, 'Segoe UI', sans-serif; background: #eef2fa; }
+        .app-container {
+            height: 100%; display: flex; flex-direction: column; background: white;
+            max-width: 1400px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.1); overflow: hidden;
+        }
+        .hero { background: linear-gradient(120deg, #0b2b5c, #102b47); color: white; padding: 20px 28px; flex-shrink: 0; }
+        .hero h1 { margin: 0 0 6px; font-size: 1.8rem; font-weight: 600; }
+        .hero p { margin: 0; opacity: 0.85; font-size: 0.9rem; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 28px 28px 28px; background: #fff; }
+        .fixed-controls { flex-shrink: 0; margin-bottom: 20px; }
+        .upload-card {
+            background: #f8fafd; border: 2px dashed #bfd9f5; border-radius: 24px; padding: 16px;
+            text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 20px;
+        }
+        .upload-card:hover { background: #f0f4fe; border-color: #3b82f6; }
+        .upload-btn {
+            background: white; border: 1px solid #cbddec; padding: 8px 22px; border-radius: 60px;
+            display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;
+        }
+        #fileName { margin-top: 8px; font-size: 0.8rem; color: #2c3e66; }
+        .global-config {
+            background: #fff; border-radius: 24px; border: 1px solid #e6edf4;
+            padding: 16px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+        }
+        .config-item { min-width: 100px; }
+        .config-item label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #4b5565; display: block; margin-bottom: 4px; }
+        .config-item input, .config-item select { width: 110px; padding: 8px 12px; border-radius: 20px; border: 1px solid #cfdfed; font-size: 0.9rem; }
+        .copies-header-fixed { background: #f9fcff; border-radius: 28px; border: 1px solid #eef2f8; flex-shrink: 0; }
+        .section-header {
+            padding: 14px 24px; border-bottom: 1px solid #e2edf7; font-weight: 700;
+            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        }
+        .copies-control { display: flex; align-items: center; gap: 12px; background: white; padding: 4px 16px; border-radius: 60px; border: 1px solid #cfdfed; }
+        .copies-control input { width: 75px; border: none; font-size: 1rem; font-weight: 600; text-align: center; outline: none; }
+        .scrollable-cards { flex: 1; overflow-y: auto; background: #fff; border-radius: 0 0 28px 28px; padding: 4px 0 20px 0; }
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px;
+            padding: 20px 16px;
+        }
+        .footer-item {
+            background: #fafcff;
+            border: 1px solid #e2edf7;
+            border-radius: 20px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.1s;
+        }
+        .footer-item:hover { background: #f5f9ff; border-color: #bdd9f0; }
+        .footer-index {
+            font-weight: 700;
+            background: #eef2fa;
+            border-radius: 30px;
+            min-width: 48px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 0.8rem;
+            color: #1e3a8a;
+        }
+        .footer-item input {
+            flex: 1;
+            border: 1px solid #cfdfed;
+            border-radius: 30px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            background: white;
+        }
+        .footer-item input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
+        }
+        .generate-section { flex-shrink: 0; margin-top: 20px; padding-top: 8px; }
+        .generate-btn {
+            background: linear-gradient(100deg, #0f2d52, #0a1e3a); color: white; border: none;
+            width: 100%; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 60px; cursor: pointer;
+        }
+        .status { margin-top: 16px; padding: 10px 16px; border-radius: 28px; background: #f1f5f9; font-size: 0.8rem; }
+        .error { background: #fee9e6; color: #b91c1c; }
+        .success { background: #e3f7ec; color: #146b3a; }
+        .info { background: #e6f0fc; color: #004eac; }
+        .small-note { font-size: 0.7rem; text-align: center; color: #6b7a8a; margin-top: 12px; }
+        @media (max-width: 760px) {
+            .hero h1 { font-size: 1.4rem; }
+            .main-panel { padding: 16px; }
+            .global-config { flex-direction: column; align-items: stretch; }
+            .config-item input, .config-item select { width: 100%; }
+            .footer-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="hero">
+        <h1>📄 矢量页脚（支持中文字体）</h1>
+        <p>上传PDF · 每份独立页脚文字 · 横向/竖向放置 · 自动加载同仓库中文字体 · 输出清晰矢量文字</p>
+    </div>
+    <div class="main-panel">
+        <div class="fixed-controls">
+            <div class="upload-card" id="uploadArea">
+                <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
+                <div class="upload-btn" id="triggerUploadBtn">📂 选择 PDF 文件</div>
+                <div id="fileName">未选择任何PDF</div>
+            </div>
+            <div class="global-config">
+                <div class="config-item"><label>🔠 字体大小(pt)</label><input type="number" id="fontSize" value="14" step="1" min="8" max="48"></div>
+                <div class="config-item"><label>📐 文字方向</label>
+                    <select id="textOrientation">
+                        <option value="horizontal">横向</option>
+                        <option value="vertical">竖向</option>
+                    </select>
+                </div>
+                <div class="config-item"><label>⬇️ 底部距离(pt)</label><input type="number" id="bottomOffset" value="10" step="2" min="-30" max="100"></div>
+                <div class="config-item"><label>➡️ 右侧距离(pt)</label><input type="number" id="rightMargin" value="15" step="2" min="5" max="100"></div>
+                <div class="config-item"><label>↔️ 横向偏移(pt)</label><input type="number" id="horizontalOffset" value="0" step="2" min="-100" max="100"></div>
+            </div>
+            <div class="copies-header-fixed">
+                <div class="section-header">
+                    <span>📌 每一份独立页脚文字（留空则不添加）</span>
+                    <div class="copies-control">
+                        <span>生成份数</span>
+                        <input type="number" id="copiesCount" min="1" max="20" value="2" step="1">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="scrollable-cards">
+            <div id="footersContainer" class="footer-grid"></div>
+        </div>
+        <div class="generate-section">
+            <button id="generateBtn" class="generate-btn">⚡ 生成合并PDF（矢量文字页脚）⚡</button>
+            <div id="statusMessage" class="status">💡 正在加载中文字体（请确保同目录下有字体文件）...</div>
+            <div class="small-note">※ 页脚使用原生PDF文本，极其清晰。同目录需放置中文字体文件（如 NotoSansSC-Regular.ttf），HTML会自动加载。</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        if (typeof PDFLib === 'undefined') {
+            document.getElementById('statusMessage').innerHTML = '❌ pdf-lib 未加载，请刷新页面。';
+            return;
+        }
+        const { PDFDocument, degrees, rgb } = PDFLib;
+
+        // DOM 元素
+        const pdfInput = document.getElementById('pdfInput');
+        const fileNameSpan = document.getElementById('fileName');
+        const copiesCountInput = document.getElementById('copiesCount');
+        const container = document.getElementById('footersContainer');
+        const generateBtn = document.getElementById('generateBtn');
+        const statusDiv = document.getElementById('statusMessage');
+        const fontSizeInput = document.getElementById('fontSize');
+        const textOrientationSelect = document.getElementById('textOrientation');
+        const bottomOffsetInput = document.getElementById('bottomOffset');
+        const rightMarginInput = document.getElementById('rightMargin');
+        const horizontalOffsetInput = document.getElementById('horizontalOffset');
+        const uploadArea = document.getElementById('uploadArea');
+        const triggerUploadBtn = document.getElementById('triggerUploadBtn');
+
+        let selectedPdfBuffer = null;
+        let originalBaseName = '';
+        let customFontBuffer = null;      // 存储字体二进制
+        let fontLoaded = false;
+
+        // 加载同目录下的字体文件（请将字体文件名改为实际文件名）
+        const FONT_FILE_NAME = 'font.ttf';  // 🔧 改成你放在仓库里的字体文件名
+
+        async function loadCustomFont() {
+            if (customFontBuffer) return customFontBuffer;
+            try {
+                showStatus(`正在加载字体：${FONT_FILE_NAME} ...`, 'info');
+                const response = await fetch(FONT_FILE_NAME);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const buffer = await response.arrayBuffer();
+                customFontBuffer = buffer;
+                fontLoaded = true;
+                showStatus(`✅ 字体加载成功，可以生成清晰的矢量页脚`, 'success');
+                return buffer;
+            } catch (err) {
+                console.error(err);
+                showStatus(`⚠️ 字体加载失败（请确认 ${FONT_FILE_NAME} 与 HTML 在同一目录）。将使用备用字体（英文），中文会显示为空白。`, 'error');
+                fontLoaded = false;
+                return null;
+            }
+        }
+
+        // 绘制文本（支持旋转0或90度）
+        function drawFooterText(page, text, x, y, fontSize, fontObj, isVertical) {
+            if (!text) return;
+            const angle = isVertical ? 90 : 0;
+            const rotateRad = (angle * Math.PI) / 180;
+            // 对于竖向，文本旋转90°，但绘制坐标需要微调（因为旋转中心是左下角）。
+            // 最简单的办法：如果是竖向，先平移再旋转。pdf-lib 提供了 drawText 的 rotate 参数，直接使用即可。
+            page.drawText(text, {
+                x: x,
+                y: y,
+                size: fontSize,
+                font: fontObj,
+                color: rgb(0, 0, 0),
+                rotate: degrees(angle)
+            });
+        }
+
+        // 测量文本宽度（pdf-lib 提供字体方法）
+        function measureTextWidth(text, font, size) {
+            if (!font) return size * text.length * 0.6;
+            try {
+                return font.widthOfTextAtSize(text, size);
+            } catch(e) {
+                return size * text.length * 0.6;
+            }
+        }
+
+        // 渲染紧凑网格
+        function renderFooterInputs(copies) {
+            container.innerHTML = '';
+            for (let i = 1; i <= copies; i++) {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'footer-item';
+                const idxSpan = document.createElement('div');
+                idxSpan.className = 'footer-index';
+                idxSpan.textContent = `${i}`;
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = `footer_${i}`;
+                input.placeholder = `第 ${i} 份页脚文字`;
+                input.value = '';
+                itemDiv.appendChild(idxSpan);
+                itemDiv.appendChild(input);
+                container.appendChild(itemDiv);
+            }
+        }
+
+        function getAllCopiesFooters() {
+            const copies = parseInt(copiesCountInput.value, 10);
+            const arr = [];
+            for (let i = 1; i <= copies; i++) {
+                const input = document.querySelector(`input[name="footer_${i}"]`);
+                const val = input ? input.value.trim() : '';
+                arr.push(val);
+            }
+            return arr;
+        }
+
+        // 主生成函数
+        async function generateMergedPDF() {
+            if (!selectedPdfBuffer) { showStatus('请先上传PDF文件', 'error'); return; }
+            if (!originalBaseName) { showStatus('无法获取文件名，请重新上传', 'error'); return; }
+            if (!fontLoaded) {
+                showStatus('字体尚未加载完成，请稍后几秒再试', 'error');
+                return;
+            }
+
+            const copies = parseInt(copiesCountInput.value, 10);
+            if (isNaN(copies) || copies < 1) { showStatus('份数无效', 'error'); return; }
+            const footers = getAllCopiesFooters();
+            if (footers.length !== copies) { renderFooterInputs(copies); showStatus('份数已变，请重新填写', 'info'); return; }
+
+            let fontSize = parseInt(fontSizeInput.value, 10);
+            if (isNaN(fontSize)) fontSize = 14;
+            const isVertical = (textOrientationSelect.value === 'vertical');
+            let bottomOffset = parseInt(bottomOffsetInput.value, 10);
+            if (isNaN(bottomOffset)) bottomOffset = 10;
+            let rightMargin = parseInt(rightMarginInput.value, 10);
+            if (isNaN(rightMargin)) rightMargin = 15;
+            let horizontalOffset = parseInt(horizontalOffsetInput.value, 10);
+            if (isNaN(horizontalOffset)) horizontalOffset = 0;
+
+            generateBtn.disabled = true;
+            const oldText = generateBtn.textContent;
+            generateBtn.textContent = '⏳ 正在生成矢量页脚...';
+
+            try {
+                const sourceBuffer = selectedPdfBuffer.slice(0);
+                const sourceDoc = await PDFDocument.load(sourceBuffer);
+                const sourcePages = sourceDoc.getPages();
+                const pageCount = sourcePages.length;
+                showStatus(`📄 原PDF共 ${pageCount} 页，生成 ${copies} 份，总页数 ${pageCount * copies} 页`, 'info');
+
+                // 创建新文档
+                const newDoc = await PDFDocument.create();
+                // 嵌入字体（整个文档只嵌入一次）
+                const fontBuffer = await loadCustomFont();
+                let embeddedFont = null;
+                if (fontBuffer) {
+                    embeddedFont = await newDoc.embedFont(fontBuffer);
+                } else {
+                    // 如果字体加载失败，使用内置字体（中文会缺失）
+                    embeddedFont = await newDoc.embedFont(PDFLib.StandardFonts.Helvetica);
+                }
+
+                // 对每份复制页面并添加页脚
+                for (let copyIdx = 0; copyIdx < copies; copyIdx++) {
+                    const footerText = footers[copyIdx];
+                    const hasFooter = !!footerText;
+                    showStatus(`✍️ 处理第 ${copyIdx+1}/${copies} 份...`, 'info');
+
+                    const copiedPages = await newDoc.copyPages(sourceDoc, [...Array(pageCount).keys()]);
+                    for (let i = 0; i < pageCount; i++) {
+                        const newPage = copiedPages[i];
+                        const { width, height } = newPage.getSize();
+                        newDoc.addPage(newPage);
+
+                        if (hasFooter) {
+                            // 计算文本位置（右下角）
+                            let textWidth = 0;
+                            if (!isVertical) {
+                                textWidth = measureTextWidth(footerText, embeddedFont, fontSize);
+                            } else {
+                                // 竖向文本，宽度近似为字体大小 * 字符数（因为旋转后高度变宽度）
+                                textWidth = fontSize * footerText.length;
+                            }
+                            let drawX = width - rightMargin - textWidth + horizontalOffset;
+                            let drawY = bottomOffset;
+                            drawX = Math.min(width - 5, Math.max(0, drawX));
+                            drawY = Math.min(height - 5, Math.max(0, drawY));
+
+                            // 对于竖向文字，由于旋转90°，绘制的基准点会变化，需要特殊处理？
+                            // pdf-lib 的 drawText 在旋转时，基准点会随旋转而改变，简单起见采用原坐标。
+                            drawFooterText(newPage, footerText, drawX, drawY, fontSize, embeddedFont, isVertical);
+                        }
+                    }
+                }
+
+                const pdfBytes = await newDoc.save();
+                const finalFileName = `${originalBaseName}(四室).pdf`;
+                saveAs(new Blob([pdfBytes]), finalFileName);
+                showStatus(`🎉 成功生成“${finalFileName}”，文字清晰锐利！`, 'success');
+            } catch (err) {
+                console.error(err);
+                showStatus(`❌ 失败: ${err.message}`, 'error');
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.textContent = oldText;
+            }
+        }
+
+        copiesCountInput.addEventListener('change', () => {
+            let v = parseInt(copiesCountInput.value, 10);
+            if (isNaN(v)) v = 1;
+            v = Math.min(20, Math.max(1, v));
+            copiesCountInput.value = v;
+            renderFooterInputs(v);
+            showStatus(`已设 ${v} 份，请在下方网格中填写文字`, 'info');
+        });
+
+        pdfInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.type !== 'application/pdf') { showStatus('请上传PDF文件', 'error'); return; }
+            showStatus('读取PDF...', 'info');
+            try {
+                const buf = await file.arrayBuffer();
+                selectedPdfBuffer = buf;
+                const fullName = file.name;
+                const lastDot = fullName.lastIndexOf('.');
+                originalBaseName = lastDot > 0 ? fullName.substring(0, lastDot) : fullName;
+                fileNameSpan.textContent = `✅ ${fullName}`;
+                showStatus(`已加载：${fullName}，可生成矢量页脚`, 'success');
+            } catch(err) {
+                showStatus('读取失败', 'error');
+                selectedPdfBuffer = null;
+            }
+        });
+
+        uploadArea.addEventListener('click', () => pdfInput.click());
+        triggerUploadBtn.addEventListener('click', (e) => { e.stopPropagation(); pdfInput.click(); });
+        generateBtn.addEventListener('click', generateMergedPDF);
+
+        async function init() {
+            renderFooterInputs(2);
+            copiesCountInput.value = 2;
+            await loadCustomFont();   // 预加载字体
+        }
+        init();
+    })();
+</script>
+</body>
+</html>
