@@ -3,75 +3,136 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>PDF页脚</title>
+    <title>PDF页眉工具 - 智能方向版</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body { height: 100%; overflow: hidden; font-family: system-ui, 'Segoe UI', sans-serif; background: #eef2fa; }
         .app-container {
             height: 100%; display: flex; flex-direction: column; background: white;
-            max-width: 1400px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.1); overflow: hidden;
+            max-width: 1200px; margin: 0 auto; box-shadow: 0 0 30px rgba(0,0,0,0.1); overflow: hidden;
         }
-        .hero { background: linear-gradient(120deg, #0b2b5c, #102b47); color: white; padding: 20px 28px; flex-shrink: 0; }
-        .hero h1 { margin: 0 0 6px; font-size: 1.8rem; font-weight: 600; }
-        .hero p { margin: 0; opacity: 0.85; font-size: 0.9rem; }
-        .main-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 20px 28px 28px 28px; background: #fff; }
-        .fixed-controls { flex-shrink: 0; margin-bottom: 20px; }
+        .hero { background: linear-gradient(120deg, #0b2b5c, #102b47); color: white; padding: 16px 24px; flex-shrink: 0; }
+        .hero h1 { margin: 0 0 4px; font-size: 1.6rem; font-weight: 600; }
+        .hero p { margin: 0; opacity: 0.85; font-size: 0.85rem; }
+        .main-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 16px 20px; background: #f5f7fb; gap: 16px; }
+        
+        .config-area {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
         .upload-card {
-            background: #f8fafd; border: 2px dashed #bfd9f5; border-radius: 24px; padding: 16px;
-            text-align: center; cursor: pointer; transition: 0.2s; margin-bottom: 20px;
+            background: #f8fafd;
+            border: 2px dashed #bfd9f5;
+            border-radius: 20px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 16px;
         }
         .upload-card:hover { background: #f0f4fe; border-color: #3b82f6; }
         .upload-btn {
-            background: white; border: 1px solid #cbddec; padding: 8px 22px; border-radius: 60px;
-            display: inline-flex; align-items: center; gap: 8px; font-weight: 500; cursor: pointer;
+            background: white;
+            border: 1px solid #cbddec;
+            padding: 8px 20px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            font-size: 0.9rem;
         }
-        #fileName { margin-top: 8px; font-size: 0.8rem; color: #2c3e66; }
-        .global-config {
-            background: #fff; border-radius: 24px; border: 1px solid #e6edf4;
-            padding: 16px 20px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;
+        #fileName { margin-top: 8px; font-size: 0.75rem; color: #2c3e66; }
+        
+        .params-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f8fafc;
+            border-radius: 16px;
         }
-        .config-item { min-width: 100px; }
-        .config-item label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #4b5565; display: block; margin-bottom: 4px; }
-        .config-item input, .config-item select { width: 110px; padding: 8px 12px; border-radius: 20px; border: 1px solid #cfdfed; font-size: 0.9rem; }
-        .copies-header-fixed { background: #f9fcff; border-radius: 28px; border: 1px solid #eef2f8; flex-shrink: 0; }
-        .section-header {
-            padding: 14px 24px; border-bottom: 1px solid #e2edf7; font-weight: 700;
-            display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;
+        .param-item {
+            min-width: 140px;
+            flex: 1;
         }
-        .copies-control { display: flex; align-items: center; gap: 12px; background: white; padding: 4px 16px; border-radius: 60px; border: 1px solid #cfdfed; }
-        .copies-control input { width: 75px; border: none; font-size: 1rem; font-weight: 600; text-align: center; outline: none; }
-        .scrollable-cards { flex: 1; overflow-y: auto; background: #fff; border-radius: 0 0 28px 28px; padding: 4px 0 20px 0; }
+        .param-item label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #4b5565;
+            margin-bottom: 4px;
+        }
+        .param-item input, .param-item select {
+            width: 100%;
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid #cfdfed;
+            font-size: 0.85rem;
+            background: white;
+        }
+        .param-item .hint {
+            font-size: 0.6rem;
+            color: #6c757d;
+            margin-top: 2px;
+        }
+        
+        .copies-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .copies-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f1f5f9;
+            padding: 4px 16px;
+            border-radius: 40px;
+        }
+        .copies-control input {
+            width: 60px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            background: transparent;
+            outline: none;
+        }
         .footer-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px;
-            padding: 20px 16px;
+            gap: 10px;
+            max-height: 240px;
+            overflow-y: auto;
+            margin-bottom: 16px;
         }
         .footer-item {
             background: #fafcff;
             border: 1px solid #e2edf7;
-            border-radius: 20px;
-            padding: 10px 14px;
+            border-radius: 16px;
+            padding: 8px 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            transition: 0.1s;
-        }
-        .footer-item:hover {
-            background: #f5f9ff;
-            border-color: #bdd9f0;
+            gap: 10px;
         }
         .footer-index {
-            font-weight: 700;
             background: #eef2fa;
             border-radius: 30px;
-            min-width: 48px;
+            min-width: 40px;
             text-align: center;
-            padding: 6px 0;
-            font-size: 0.8rem;
-            color: #1e3a8a;
+            padding: 4px 0;
+            font-size: 0.75rem;
+            font-weight: 600;
         }
         .footer-item input {
             flex: 1;
@@ -79,74 +140,138 @@
             border-radius: 30px;
             padding: 8px 12px;
             font-size: 0.85rem;
-            background: white;
         }
-        .footer-item input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 2px rgba(59,130,246,0.2);
-        }
-        .generate-section { flex-shrink: 0; margin-top: 20px; padding-top: 8px; }
+        
         .generate-btn {
-            background: linear-gradient(100deg, #0f2d52, #0a1e3a); color: white; border: none;
-            width: 100%; padding: 14px; font-size: 1rem; font-weight: 700; border-radius: 60px; cursor: pointer;
+            background: linear-gradient(100deg, #0f2d52, #0a1e3a);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 40px;
+            cursor: pointer;
+            margin-top: 8px;
         }
-        .status { margin-top: 16px; padding: 10px 16px; border-radius: 28px; background: #f1f5f9; font-size: 0.8rem; }
+        .status {
+            margin-top: 12px;
+            padding: 8px 12px;
+            border-radius: 20px;
+            background: #f1f5f9;
+            font-size: 0.75rem;
+        }
         .error { background: #fee9e6; color: #b91c1c; }
         .success { background: #e3f7ec; color: #146b3a; }
         .info { background: #e6f0fc; color: #004eac; }
-        .small-note { font-size: 0.7rem; text-align: center; color: #6b7a8a; margin-top: 12px; }
-        @media (max-width: 760px) {
-            .hero h1 { font-size: 1.4rem; }
-            .main-panel { padding: 16px; }
-            .global-config { flex-direction: column; align-items: stretch; }
-            .config-item input, .config-item select { width: 100%; }
-            .footer-grid { grid-template-columns: 1fr; }
+        
+        .preview-area {
+            background: white;
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        .preview-title {
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .preview-canvas-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 12px;
+            min-height: 200px;
+        }
+        canvas#previewCanvas {
+            max-width: 100%;
+            max-height: 280px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: white;
+        }
+        .orientation-info {
+            margin-top: 12px;
+            padding: 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            text-align: center;
+            background: #eef2ff;
+            color: #1e3a8a;
+        }
+        .small-note { font-size: 0.65rem; text-align: center; color: #6b7a8a; margin-top: 8px; }
     </style>
 </head>
 <body>
 <div class="app-container">
     <div class="hero">
-        <h1>📄 右下角页脚</h1>
-        <p>上传PDF · 每份独立页脚文字 · 合并为单PDF</p>
+        <h1>📄 PDF页眉工具 · 智能方向版</h1>
+        <p>上传PDF → 选择纸张方向 → 填写页眉文字 → 自动定位（横向：右上角 / 竖向：右下角旋转90°）</p>
     </div>
     <div class="main-panel">
-        <div class="fixed-controls">
+        <div class="config-area">
             <div class="upload-card" id="uploadArea">
                 <input type="file" id="pdfInput" accept="application/pdf" style="display: none;">
                 <div class="upload-btn" id="triggerUploadBtn">📂 选择 PDF 文件</div>
                 <div id="fileName">未选择任何PDF</div>
             </div>
-            <div class="global-config">
-                <div class="config-item"><label>🔠 字体大小(pt)</label><input type="number" id="fontSize" value="14" step="1" min="8" max="48"></div>
-                <div class="config-item"><label>🔄 纸张方向</label>
-                    <select id="rotateAngle">
-                        <option value="0">竖向</option>
-                        <option value="90">横向</option>
+            
+            <!-- 精简参数：只有一个核心选项：页面方向 -->
+            <div class="params-grid">
+                <div class="param-item">
+                    <label>📄 页面方向</label>
+                    <select id="pageDirection">
+                        <option value="landscape">横向（页眉在右上角，文字水平）</option>
+                        <option value="portrait">竖向（页眉在右下角，文字顺时针旋转90°）</option>
                     </select>
+                    <div class="hint">根据您的PDF实际纸张方向选择</div>
                 </div>
-                <div class="config-item"><label>⬇️ 底部距离(pt)</label><input type="number" id="bottomOffset" value="35" step="2" min="-30" max="100"></div>
-                <div class="config-item"><label>➡️ 右侧距离(pt)</label><input type="number" id="rightMargin" value="35" step="2" min="5" max="100"></div>
-                <div class="config-item"><label>↔️ 横向偏移(pt)</label><input type="number" id="horizontalOffset" value="0" step="2" min="-100" max="100"></div>
-            </div>
-            <div class="copies-header-fixed">
-                <div class="section-header">
-                    <span>📌 每一份独立页脚文字（留空则不添加）</span>
-                    <div class="copies-control">
-                        <span>生成份数</span>
-                        <input type="number" id="copiesCount" min="1" max="20" value="2" step="1">
-                    </div>
+                <div class="param-item">
+                    <label>🔠 字体大小</label>
+                    <input type="number" id="fontSize" value="14" step="1" min="8" max="48">
+                    <div class="hint">推荐 12-16</div>
+                </div>
+                <div class="param-item">
+                    <label>📏 边缘距离(pt)</label>
+                    <input type="number" id="edgeOffset" value="15" step="2" min="-30" max="100">
+                    <div class="hint">横向：距上/右边；竖向：距下/右边</div>
+                </div>
+                <div class="param-item">
+                    <label>↔️ 横向偏移(pt)</label>
+                    <input type="number" id="horizontalOffset" value="0" step="2" min="-100" max="100">
+                    <div class="hint">微调左右位置</div>
                 </div>
             </div>
-        </div>
-        <div class="scrollable-cards">
+            
+            <div class="copies-header">
+                <span><strong>📌 每份独立页眉文字</strong>（留空则不添加）</span>
+                <div class="copies-control">
+                    <span>生成份数</span>
+                    <input type="number" id="copiesCount" min="1" max="20" value="2" step="1">
+                </div>
+            </div>
             <div id="footersContainer" class="footer-grid"></div>
+            
+            <button id="generateBtn" class="generate-btn">⚡ 生成合并PDF（自动适配方向）⚡</button>
+            <div id="statusMessage" class="status">💡 请先上传PDF，然后选择正确的纸张方向</div>
         </div>
-        <div class="generate-section">
-            <button id="generateBtn" class="generate-btn">⚡ 生成合并PDF（右下角页脚）⚡</button>
-            <div id="statusMessage" class="status">💡 每份可独立设置页脚文字，放置于右下角。</div>
-            <div class="small-note">※ 页脚转为图片，完美支持中文。总页数 = 原页数 × 份数。网格布局紧凑，方便多份配置。</div>
+        
+        <div class="preview-area">
+            <div class="preview-title">
+                📷 第一页预览
+                <span style="font-size:0.7rem; font-weight:normal;">👇 确认页面实际方向</span>
+            </div>
+            <div class="preview-canvas-container">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+            <div class="orientation-info" id="orientationInfo">
+                未上传文件
+            </div>
+            <div class="small-note">※ 根据预览确认纸张方向，然后在上方选择对应的「页面方向」即可。</div>
         </div>
     </div>
 </div>
@@ -157,8 +282,10 @@
             document.getElementById('statusMessage').innerHTML = '❌ pdf-lib 未加载，请刷新页面。';
             return;
         }
-        const { PDFDocument } = PDFLib;
-
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        
+        const { PDFDocument, StandardFonts, rgb, degrees } = PDFLib;
+        
         // DOM 元素
         const pdfInput = document.getElementById('pdfInput');
         const fileNameSpan = document.getElementById('fileName');
@@ -167,109 +294,114 @@
         const generateBtn = document.getElementById('generateBtn');
         const statusDiv = document.getElementById('statusMessage');
         const fontSizeInput = document.getElementById('fontSize');
-        const rotateAngleSelect = document.getElementById('rotateAngle');
-        const bottomOffsetInput = document.getElementById('bottomOffset');
-        const rightMarginInput = document.getElementById('rightMargin');
+        const pageDirectionSelect = document.getElementById('pageDirection');
+        const edgeOffsetInput = document.getElementById('edgeOffset');
         const horizontalOffsetInput = document.getElementById('horizontalOffset');
         const uploadArea = document.getElementById('uploadArea');
         const triggerUploadBtn = document.getElementById('triggerUploadBtn');
-
+        const previewCanvas = document.getElementById('previewCanvas');
+        const orientationInfo = document.getElementById('orientationInfo');
+        
         let selectedPdfBuffer = null;
-        let originalBaseName = '';  // 存储上传文件的原始名称（不含扩展名）
-        const imageCache = new Map();
-
+        let originalBaseName = '';
+        
         function showStatus(msg, type = 'info') {
             statusDiv.innerHTML = msg;
             statusDiv.className = `status ${type}`;
         }
-
-        // 将文本渲染为透明背景PNG（不旋转）
-        async function textToImage(text, fontSizePt) {
-            const cacheKey = `${text}_${fontSizePt}`;
-            if (imageCache.has(cacheKey)) return imageCache.get(cacheKey);
-            
+        
+        // 获取第一页实际尺寸
+        async function getPageSize(buffer) {
+            const doc = await PDFDocument.load(buffer);
+            const page = doc.getPages()[0];
+            const { width, height } = page.getSize();
+            return { width, height };
+        }
+        
+        // 渲染预览
+        async function renderFirstPage(buffer) {
+            try {
+                const blob = new Blob([buffer], { type: 'application/pdf' });
+                const url = URL.createObjectURL(blob);
+                const pdf = await pdfjsLib.getDocument(url).promise;
+                const page = await pdf.getPage(1);
+                const container = previewCanvas.parentElement;
+                const maxWidth = container.clientWidth - 20;
+                let scale = maxWidth / page.getViewport({ scale: 1 }).width;
+                scale = Math.min(scale, 1.5);
+                const viewport = page.getViewport({ scale: scale });
+                previewCanvas.width = viewport.width;
+                previewCanvas.height = viewport.height;
+                const context = previewCanvas.getContext('2d');
+                await page.render({ canvasContext: context, viewport }).promise;
+                URL.revokeObjectURL(url);
+                
+                const { width, height } = await getPageSize(buffer);
+                const isLandscape = width > height;
+                orientationInfo.innerHTML = `📐 检测到实际尺寸: ${width.toFixed(0)} x ${height.toFixed(0)} pt | ${isLandscape ? '横向 (宽>高)' : '竖向 (高>宽)'}<br>请在上方选择对应的「页面方向」`;
+                return { width, height };
+            } catch(e) {
+                orientationInfo.innerHTML = '预览失败，请检查PDF文件';
+                return null;
+            }
+        }
+        
+        function hasChinese(str) {
+            return /[\u4e00-\u9fff]/.test(str);
+        }
+        
+        // 文字转图片（中文后备方案）
+        async function textToImage(text, fontSizePt, needRotate) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const fontFamily = "'Noto Sans CJK SC', 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', 'SimHei', 'sans-serif'";
             ctx.font = `${fontSizePt}px ${fontFamily}`;
-            const textWidth = ctx.measureText(text).width;
-            const textHeight = fontSizePt * 1.2;
+            let textWidth = ctx.measureText(text).width;
+            let textHeight = fontSizePt * 1.2;
             const paddingX = 6;
             const paddingY = 4;
-            const baseWidth = Math.ceil(textWidth + paddingX * 2);
-            const baseHeight = Math.ceil(textHeight + paddingY * 2);
+            let baseWidth = Math.ceil(textWidth + paddingX * 2);
+            let baseHeight = Math.ceil(textHeight + paddingY * 2);
             
-            canvas.width = baseWidth;
-            canvas.height = baseHeight;
-            const newCtx = canvas.getContext('2d');
-            newCtx.clearRect(0, 0, canvas.width, canvas.height);
-            newCtx.font = `${fontSizePt}px ${fontFamily}`;
-            newCtx.fillStyle = '#000000';
-            newCtx.textBaseline = 'middle';
-            newCtx.textAlign = 'center';
-            newCtx.fillText(text, canvas.width/2, canvas.height/2);
-            
-            const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-            const arrayBuffer = await blob.arrayBuffer();
-            const result = {
-                data: new Uint8Array(arrayBuffer),
-                width: canvas.width,
-                height: canvas.height
-            };
-            imageCache.set(cacheKey, result);
-            return result;
+            if (needRotate) {
+                // 预旋转90度（用于竖向模式）
+                const tmpCanvas = document.createElement('canvas');
+                tmpCanvas.width = baseWidth;
+                tmpCanvas.height = baseHeight;
+                const tmpCtx = tmpCanvas.getContext('2d');
+                tmpCtx.font = `${fontSizePt}px ${fontFamily}`;
+                tmpCtx.fillStyle = '#000000';
+                tmpCtx.textBaseline = 'middle';
+                tmpCtx.textAlign = 'center';
+                tmpCtx.fillText(text, tmpCanvas.width/2, tmpCanvas.height/2);
+                const rotCanvas = document.createElement('canvas');
+                rotCanvas.width = baseHeight;
+                rotCanvas.height = baseWidth;
+                const rotCtx = rotCanvas.getContext('2d');
+                rotCtx.save();
+                rotCtx.translate(rotCanvas.width/2, rotCanvas.height/2);
+                rotCtx.rotate(90 * Math.PI / 180);
+                rotCtx.drawImage(tmpCanvas, -baseWidth/2, -baseHeight/2);
+                rotCtx.restore();
+                const blob = await new Promise(resolve => rotCanvas.toBlob(resolve, 'image/png'));
+                const buffer = await blob.arrayBuffer();
+                return { data: new Uint8Array(buffer), width: rotCanvas.width, height: rotCanvas.height };
+            } else {
+                canvas.width = baseWidth;
+                canvas.height = baseHeight;
+                const newCtx = canvas.getContext('2d');
+                newCtx.clearRect(0, 0, canvas.width, canvas.height);
+                newCtx.font = `${fontSizePt}px ${fontFamily}`;
+                newCtx.fillStyle = '#000000';
+                newCtx.textBaseline = 'middle';
+                newCtx.textAlign = 'center';
+                newCtx.fillText(text, canvas.width/2, canvas.height/2);
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const buffer = await blob.arrayBuffer();
+                return { data: new Uint8Array(buffer), width: canvas.width, height: canvas.height };
+            }
         }
-
-        // 旋转图片90度（逆时针）
-        async function rotateImage90(imgData) {
-            return new Promise((resolve, reject) => {
-                const blob = new Blob([imgData], { type: 'image/png' });
-                const url = URL.createObjectURL(blob);
-                const img = new Image();
-                img.onload = () => {
-                    const { width, height } = img;
-                    const canvas = document.createElement('canvas');
-                    canvas.width = height;
-                    canvas.height = width;
-                    const ctx = canvas.getContext('2d');
-                    ctx.save();
-                    ctx.translate(height/2, width/2);
-                    ctx.rotate(90 * Math.PI / 180);
-                    ctx.drawImage(img, -width/2, -height/2);
-                    ctx.restore();
-                    canvas.toBlob((rotatedBlob) => {
-                        if (!rotatedBlob) {
-                            reject(new Error('旋转生成blob失败'));
-                            return;
-                        }
-                        rotatedBlob.arrayBuffer().then(buffer => {
-                            resolve(new Uint8Array(buffer));
-                        }).catch(reject);
-                        URL.revokeObjectURL(url);
-                    }, 'image/png');
-                };
-                img.onerror = (err) => {
-                    URL.revokeObjectURL(url);
-                    reject(err);
-                };
-                img.src = url;
-            });
-        }
-
-        // 根据旋转角度生成最终图片
-        async function getFinalImage(text, fontSizePt, rotateDeg) {
-            if (!text) return null;
-            const base = await textToImage(text, fontSizePt);
-            if (rotateDeg === 0) return base;
-            const rotatedData = await rotateImage90(base.data);
-            return {
-                data: rotatedData,
-                width: base.height,
-                height: base.width
-            };
-        }
-
-        // 紧凑网格渲染
+        
         function renderFooterInputs(copies) {
             container.innerHTML = '';
             for (let i = 1; i <= copies; i++) {
@@ -281,100 +413,127 @@
                 const input = document.createElement('input');
                 input.type = 'text';
                 input.name = `footer_${i}`;
-                input.placeholder = `第 ${i} 份页脚文字`;
+                input.placeholder = `第 ${i} 份页眉文字`;
                 input.value = '';
                 itemDiv.appendChild(idxSpan);
                 itemDiv.appendChild(input);
                 container.appendChild(itemDiv);
             }
         }
-
-        function getAllCopiesFooters() {
-            const copies = parseInt(copiesCountInput.value, 10);
+        
+        function getAllFooters() {
+            const copies = parseInt(copiesCountInput.value);
             const arr = [];
             for (let i = 1; i <= copies; i++) {
-                const input = document.querySelector(`input[name="footer_${i}"]`);
-                const val = input ? input.value.trim() : '';
-                arr.push(val);
+                const inp = document.querySelector(`input[name="footer_${i}"]`);
+                arr.push(inp ? inp.value.trim() : '');
             }
             return arr;
         }
-
-        let currentFontSize = 14;
-
-        // 合并生成
+        
+        // 核心生成逻辑
         async function generateMergedPDF() {
             if (!selectedPdfBuffer) { showStatus('请先上传PDF文件', 'error'); return; }
-            if (!originalBaseName) { showStatus('无法获取原始文件名，请重新上传', 'error'); return; }
-            const copies = parseInt(copiesCountInput.value, 10);
+            const copies = parseInt(copiesCountInput.value);
             if (isNaN(copies) || copies < 1) { showStatus('份数无效', 'error'); return; }
-            const footers = getAllCopiesFooters();
+            const footers = getAllFooters();
             if (footers.length !== copies) { renderFooterInputs(copies); showStatus('份数已变，请重新填写', 'info'); return; }
-
-            currentFontSize = parseInt(fontSizeInput.value, 10);
-            if (isNaN(currentFontSize)) currentFontSize = 14;
-            const rotateDeg = parseInt(rotateAngleSelect.value, 10);
-            let bottomOffset = parseInt(bottomOffsetInput.value, 10);
-            if (isNaN(bottomOffset)) bottomOffset = 10;
-            let rightMargin = parseInt(rightMarginInput.value, 10);
-            if (isNaN(rightMargin)) rightMargin = 15;
-            let horizontalOffset = parseInt(horizontalOffsetInput.value, 10);
-            if (isNaN(horizontalOffset)) horizontalOffset = 0;
-
+            
+            let fontSize = parseInt(fontSizeInput.value) || 14;
+            const isLandscape = pageDirectionSelect.value === 'landscape';
+            let edgeOffset = parseInt(edgeOffsetInput.value) || 15;
+            let hOffset = parseInt(horizontalOffsetInput.value) || 0;
+            
             generateBtn.disabled = true;
             const oldText = generateBtn.textContent;
-            generateBtn.textContent = '⏳ 正在生成页脚图片...';
+            generateBtn.textContent = '⏳ 正在生成页眉...';
             
             try {
-                // 预生成所有份数的页脚图片
-                const copiesImages = [];
-                for (let idx = 0; idx < copies; idx++) {
-                    const text = footers[idx];
-                    let img = null;
-                    if (text) {
-                        img = await getFinalImage(text, currentFontSize, rotateDeg);
+                // 预生成页眉内容
+                const copiesData = [];
+                for (let text of footers) {
+                    if (!text) { copiesData.push(null); continue; }
+                    const needImage = hasChinese(text);
+                    if (!needImage && isLandscape) {
+                        // 横向英文：直接用矢量文字
+                        copiesData.push({ type: 'text', content: text, rotate: 0 });
+                    } else if (!needImage && !isLandscape) {
+                        // 竖向英文：矢量文字旋转90度
+                        copiesData.push({ type: 'text', content: text, rotate: 90 });
+                    } else {
+                        // 含中文：转为图片，并根据方向决定是否旋转
+                        const needRotate = !isLandscape; // 竖向模式需要旋转图片
+                        const img = await textToImage(text, fontSize, needRotate);
+                        copiesData.push({ type: 'image', content: img });
                     }
-                    copiesImages.push(img);
                 }
-
+                
                 const sourceBuffer = selectedPdfBuffer.slice(0);
                 const sourceDoc = await PDFDocument.load(sourceBuffer);
                 const sourcePages = sourceDoc.getPages();
                 const pageCount = sourcePages.length;
                 showStatus(`📄 原PDF共 ${pageCount} 页，生成 ${copies} 份，总页数 ${pageCount * copies} 页`, 'info');
                 generateBtn.textContent = '⏳ 正在合并页面...';
-
+                
                 const newDoc = await PDFDocument.create();
+                const helvetica = await newDoc.embedFont(StandardFonts.Helvetica);
                 
                 for (let copyIdx = 0; copyIdx < copies; copyIdx++) {
-                    const img = copiesImages[copyIdx];
-                    const hasFooter = !!img;
-                    showStatus(`✍️ 处理第 ${copyIdx+1}/${copies} 份...`, 'info');
-                    
+                    const data = copiesData[copyIdx];
+                    const hasFooter = !!data;
                     const copiedPages = await newDoc.copyPages(sourceDoc, [...Array(pageCount).keys()]);
+                    
                     for (let i = 0; i < pageCount; i++) {
-                        const newPage = copiedPages[i];
-                        const { width, height } = newPage.getSize();
-                        newDoc.addPage(newPage);
+                        const page = copiedPages[i];
+                        const { width, height } = page.getSize();
+                        newDoc.addPage(page);
+                        if (!hasFooter) continue;
                         
-                        if (hasFooter && img && img.data) {
-                            const embed = await newDoc.embedPng(img.data);
-                            const imgW = img.width;
-                            const imgH = img.height;
-                            let drawX = width - rightMargin - imgW + horizontalOffset;
-                            let drawY = bottomOffset;
-                            drawX = Math.min(width - imgW, Math.max(0, drawX));
-                            drawY = Math.min(height - imgH, Math.max(0, drawY));
-                            newPage.drawImage(embed, { x: drawX, y: drawY, width: imgW, height: imgH });
+                        if (data.type === 'text') {
+                            // 矢量文字
+                            let textWidth = helvetica.widthOfTextAtSize(data.content, fontSize);
+                            let x, y;
+                            if (isLandscape) {
+                                // 横向：右上角
+                                x = width - edgeOffset - textWidth + hOffset;
+                                y = height - edgeOffset;
+                            } else {
+                                // 竖向：右下角，文字旋转90度
+                                // 旋转后，文字宽度变高度
+                                x = width - edgeOffset - fontSize * data.content.length + hOffset;
+                                y = edgeOffset;
+                            }
+                            x = Math.min(width - 5, Math.max(0, x));
+                            y = Math.min(height - 5, Math.max(0, y));
+                            page.drawText(data.content, {
+                                x, y, size: fontSize, font: helvetica,
+                                color: rgb(0,0,0), rotate: degrees(data.rotate)
+                            });
+                        } else if (data.type === 'image') {
+                            const embed = await newDoc.embedPng(data.content.data);
+                            const imgW = data.content.width;
+                            const imgH = data.content.height;
+                            let x, y;
+                            if (isLandscape) {
+                                // 横向：右上角
+                                x = width - edgeOffset - imgW + hOffset;
+                                y = height - edgeOffset - imgH;
+                            } else {
+                                // 竖向：右下角（图片已旋转90度）
+                                x = width - edgeOffset - imgW + hOffset;
+                                y = edgeOffset;
+                            }
+                            x = Math.min(width - imgW, Math.max(0, x));
+                            y = Math.min(height - imgH, Math.max(0, y));
+                            page.drawImage(embed, { x, y, width: imgW, height: imgH });
                         }
                     }
                 }
                 
                 const pdfBytes = await newDoc.save();
-                // 按用户要求：文件名 = 原始文件名(四室).pdf
-                const finalFileName = `${originalBaseName}（四室）.pdf`;
+                const finalFileName = `${originalBaseName}(四室).pdf`;
                 saveAs(new Blob([pdfBytes]), finalFileName);
-                showStatus(`🎉 成功生成合并PDF，文件名为“${finalFileName}”，页脚旋转 ${rotateDeg}°，已下载！`, 'success');
+                showStatus(`🎉 成功生成“${finalFileName}”，页眉已按${isLandscape ? '横向（右上角）' : '竖向（右下角旋转90°）'}放置！`, 'success');
             } catch (err) {
                 console.error(err);
                 showStatus(`❌ 失败: ${err.message}`, 'error');
@@ -383,46 +542,38 @@
                 generateBtn.textContent = oldText;
             }
         }
-
+        
         copiesCountInput.addEventListener('change', () => {
-            let v = parseInt(copiesCountInput.value, 10);
-            if (isNaN(v)) v = 1;
-            v = Math.min(20, Math.max(1, v));
+            let v = parseInt(copiesCountInput.value);
+            v = Math.min(20, Math.max(1, isNaN(v) ? 2 : v));
             copiesCountInput.value = v;
             renderFooterInputs(v);
-            showStatus(`已设 ${v} 份，下方网格中填写每份页脚文字`, 'info');
         });
-
+        
         pdfInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file) return;
-            if (file.type !== 'application/pdf') { showStatus('请上传PDF', 'error'); return; }
-            showStatus('读取PDF...', 'info');
+            if (!file || file.type !== 'application/pdf') { showStatus('请上传PDF文件', 'error'); return; }
+            showStatus('加载中...', 'info');
             try {
                 const buf = await file.arrayBuffer();
                 selectedPdfBuffer = buf;
-                // 获取文件名不含扩展名
-                const fullName = file.name;
-                const lastDot = fullName.lastIndexOf('.');
-                originalBaseName = lastDot > 0 ? fullName.substring(0, lastDot) : fullName;
+                const lastDot = file.name.lastIndexOf('.');
+                originalBaseName = lastDot > 0 ? file.name.slice(0, lastDot) : file.name;
                 fileNameSpan.textContent = `✅ ${file.name}`;
-                showStatus(`已加载PDF，文件名基础：${originalBaseName}，设置好页脚后点击生成`, 'success');
+                await renderFirstPage(buf);
+                showStatus('已加载预览，请根据实际方向选择「页面方向」', 'success');
             } catch(err) {
                 showStatus('读取失败', 'error');
                 selectedPdfBuffer = null;
-                originalBaseName = '';
             }
         });
-
+        
         uploadArea.addEventListener('click', () => pdfInput.click());
         triggerUploadBtn.addEventListener('click', (e) => { e.stopPropagation(); pdfInput.click(); });
         generateBtn.addEventListener('click', generateMergedPDF);
-
-        function init() {
-            renderFooterInputs(2);
-            copiesCountInput.value = 2;
-        }
-        init();
+        
+        renderFooterInputs(2);
+        copiesCountInput.value = 2;
     })();
 </script>
 </body>
